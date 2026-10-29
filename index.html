@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AWS VPC Peering — Simulation Demo</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1220;--panel:#121d30;--line:#2b3b55;--text:#eef4ff;--muted:#aab8ce;--blue:#69a9ff;--green:#55d6a1;--red:#ff7f86;--amber:#ffd27a}
+*{box-sizing:border-box}body{margin:0;font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:radial-gradient(circle at top,#172844,var(--bg) 55%);color:var(--text)}
+main{max-width:1050px;margin:auto;padding:32px 18px 60px}header{text-align:center;padding:22px 0 28px}h1{font-size:clamp(2rem,5vw,3.2rem);margin:0 0 8px}header p,.muted{color:var(--muted)}.pill{display:inline-block;border:1px solid #40618a;border-radius:999px;padding:5px 12px;color:#b8d7ff;font-size:.85rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}.card{background:linear-gradient(160deg,#17253b,#101a2b);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 12px 35px #0002}h2{margin:0 0 12px;font-size:1.2rem}h3{margin:0 0 6px;font-size:1rem}.vpc{border:1px solid #3d628e;border-radius:14px;padding:15px;margin-top:12px;background:#101b2d}.instance{margin-top:10px;border:1px solid #35516f;border-radius:10px;padding:12px}.ip{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#a9d3ff}.peer{text-align:center;margin:18px 0;color:var(--blue);font-weight:700}.table{width:100%;border-collapse:collapse;font-size:.92rem}.table th,.table td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top}.table th{color:#b8c9e2}.btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}button{background:#2563eb;color:white;border:0;border-radius:10px;padding:11px 14px;font-weight:700;cursor:pointer}button.secondary{background:#26364d}button:hover{filter:brightness(1.12)}.result{margin-top:14px;padding:14px;border-radius:12px;background:#0b1423;border:1px solid var(--line)}.status{font-weight:700}.good{color:var(--green)}.bad{color:var(--red)}.warn{color:var(--amber)}footer{margin-top:22px;color:var(--muted);font-size:.9rem;text-align:center}.notice{border-left:4px solid var(--amber);padding:12px 14px;background:#2a2417;border-radius:8px;color:#ffe7b3;margin:18px 0}
+@media(max-width:560px){main{padding:20px 12px}.card{padding:16px}.table{font-size:.82rem}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<span class="pill">STUDENT PROJECT · INTERACTIVE DEMO</span>
+<h1>AWS VPC Peering</h1>
+<p>Explore how routes and security rules affect communication between two private networks.</p>
+</header>
+<div class="notice"><strong>Simulation only:</strong> This website does not connect to AWS, create cloud resources, or send real network packets. The results below are illustrative.</div>
+<section class="card">
+<h2>Network architecture</h2>
+<div class="grid">
+<div class="vpc"><h3>VPC A</h3><div class="ip">CIDR: 10.10.0.0/16</div><div class="instance"><strong>App-A</strong><br><span class="ip">10.10.2.10</span><br><span class="muted">Private subnet · no public IP</span></div></div>
+<div class="vpc"><h3>VPC B</h3><div class="ip">CIDR: 10.20.0.0/16</div><div class="instance"><strong>App-B</strong><br><span class="ip">10.20.1.10</span><br><span class="muted">Private subnet · no public IP</span></div></div>
+</div>
+<div class="peer">VPC A ⇄ VPC Peering Connection ⇄ VPC B</div>
+</section>
+<div class="grid" style="margin-top:16px">
+<section class="card"><h2>Route table examples</h2><table class="table"><thead><tr><th>Route table</th><th>Destination</th><th>Target</th></tr></thead><tbody><tr><td>VPC A</td><td class="ip">10.20.0.0/16</td><td>Peering connection</td></tr><tr><td>VPC B</td><td class="ip">10.10.0.0/16</td><td>Peering connection</td></tr></tbody></table><p class="muted">Both VPCs need routes to each other's CIDR range.</p></section>
+<section class="card"><h2>Security group examples</h2><ul><li>Allow only required traffic from trusted sources.</li><li>ICMP rules can permit ping-style tests.</li><li>Restrict SSH (TCP port 22); avoid open access from <code>0.0.0.0/0</code>.</li></ul><p class="muted">Actual rules must match the intended application and environment.</p></section>
+</div>
+<section class="card" style="margin-top:16px"><h2>Try a simulated connectivity test</h2><p class="muted">Choose a scenario to see the expected illustrative outcome.</p><div class="btns"><button onclick="runTest('before')">Before peering</button><button onclick="runTest('success')">Routes + rules configured</button><button class="secondary" onclick="runTest('blocked')">Security rule blocked</button><button class="secondary" onclick="runTest('restored')">Rule restored</button></div><div id="result" class="result" aria-live="polite"><span class="warn status">Ready</span><p>Select a scenario above.</p></div></section>
+<footer>Prepared as a local educational simulation · No real AWS resources deployed</footer>
+</main>
+<script>
+function runTest(kind){
+ const r=document.getElementById('result');
+ const scenarios={
+ before:{cls:'bad',title:'SIMULATED FAILURE — Before peering',body:'No peering route is available in this scenario. Expected result: request times out.'},
+ success:{cls:'good',title:'SIMULATED SUCCESS — Routes and rules configured',body:'Routes exist in both directions and the security rules permit the test traffic. Expected result: 4 illustrative replies, 0% simulated packet loss.'},
+ blocked:{cls:'bad',title:'SIMULATED FAILURE — Security rule blocked',body:'The scenario blocks ICMP traffic. Expected result: request times out even though a peering route may exist.'},
+ restored:{cls:'good',title:'SIMULATED SUCCESS — Rule restored',body:'The ICMP rule is allowed again. Expected result: 4 illustrative replies, 0% simulated packet loss.'}
+ };
+ const s=scenarios[kind];r.innerHTML='<span class="status '+s.cls+'">'+s.title+'</span><p>'+s.body+'</p><small class="muted">This is a scripted demonstration, not a real ping or AWS connectivity test.</small>';
+}
+</script>
+</body>
+</html>
